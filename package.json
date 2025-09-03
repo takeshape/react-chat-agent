@@ -1,0 +1,87 @@
+{
+  "name": "@takeshape/react-chat-agent",
+  "version": "0.0.8",
+  "keywords": [
+    "cap.js",
+    "captcha.js",
+    "hooks",
+    "react-hooks",
+    "react",
+    "nodejs",
+    "captcha",
+    "pow",
+    "proof-of-work",
+    "spam",
+    "bot",
+    "protection",
+    "token"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/takeshape/react-chat-agent.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "ci": "vitest run",
+    "clean": "del-cli dist *.tsbuildinfo",
+    "dev": "vite example --config vite.config.ts --mode development",
+    "format": "biome check --write",
+    "prepare": "npm run build",
+    "release": "npm run test && npm run build && np --no-tests --no-publish",
+    "test": "biome check --error-on-warnings && tsc --noEmit && vitest run",
+    "watch": "vitest"
+  },
+  "dependencies": {
+    "@llm-ui/markdown": "^0.13.3",
+    "@llm-ui/react": "^0.13.3",
+    "@takeshape/use-cap": "0.0.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.2",
+    "@tailwindcss/vite": "^4.1.12",
+    "@testing-library/react": "16.3.0",
+    "@types/node": "^22.13.13",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.1",
+    "@vitest/web-worker": "^3.2.4",
+    "concurrently": "^9.2.0",
+    "del-cli": "5.1.0",
+    "graphql": "^16.6.0",
+    "jsdom": "^26.1.0",
+    "np": "10.2.0",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.12",
+    "typescript": "5.8.2",
+    "vite-plugin-dts": "4.5.4",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
