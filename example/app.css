@@ -1,2 +1,6 @@
 @import 'tailwindcss';
 @source "../src";
+
+.bg-navy {
+  background-color: #00316d;
+}
