@@ -4,8 +4,8 @@ import { useTakeShapeStore } from '../stores/takeshape-client-store';
 import type { TakeShapeClient } from '../takeshape/client';
 import {
   CREATE_CHAT_SESSION,
-  GET_CHAT_AGENT_MESSAGE,
-  SEND_CHAT_AGENT_MESSAGE
+  GET_CHAT_MESSAGE,
+  SEND_CHAT_MESSAGE
 } from '../takeshape/queries';
 import { type HistoryItem, useAiSession } from './use-ai-session';
 
@@ -13,10 +13,7 @@ const POLLING_INTERVAL = 100;
 const POLLING_MAX_WAIT = 1000 * 60 * 5; // 5 minutes
 const POLLING_MAX_ATTEMPTS = POLLING_MAX_WAIT / POLLING_INTERVAL;
 
-type SessionMemory = {
-  typeId?: number;
-  typeName?: string;
-};
+type SessionMemory = Record<string, unknown>;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -33,36 +30,33 @@ export type MutationArgs = {
 
 const getMutationFn =
   (client: TakeShapeClient) => async (args: MutationArgs) => {
-    const { input, typeId, typeName, token } = args;
+    const { input, token } = args;
     let sessionId = args.sessionId;
 
     if (!sessionId) {
       const createSessionResult = await client.mutation(CREATE_CHAT_SESSION);
-      sessionId = createSessionResult.createChatAgentSession?.id;
+      sessionId = createSessionResult.createChatSession?.id;
     }
 
     if (!sessionId) {
       throw new Error('No session ID');
     }
 
-    const sendMessageResult = await client.mutation(SEND_CHAT_AGENT_MESSAGE, {
+    const sendMessageResult = await client.mutation(SEND_CHAT_MESSAGE, {
       variables: {
         input,
         sessionId,
-        typeId,
-        typeName,
         token
       }
     });
 
-    const messageId = sendMessageResult.sendChatAgentMessage?.messageId;
-    let output = sendMessageResult.sendChatAgentMessage?.output;
-    let sessionMemory = sendMessageResult.sendChatAgentMessage?.session
+    const messageId = sendMessageResult.sendChatMessage?.messageId;
+    let output = sendMessageResult.sendChatMessage?.output;
+    let sessionMemory = sendMessageResult.sendChatMessage?.session
       .sessionMemory as SessionMemory;
 
     if (!output) {
       let attempts = POLLING_MAX_ATTEMPTS;
-      const messageId = sendMessageResult.sendChatAgentMessage?.messageId;
 
       if (!messageId) {
         throw new Error('No message ID');
@@ -71,22 +65,22 @@ const getMutationFn =
       while (!output && attempts > 0) {
         await sleep(POLLING_INTERVAL);
 
-        const getMessageResult = await client.query(GET_CHAT_AGENT_MESSAGE, {
+        const getMessageResult = await client.query(GET_CHAT_MESSAGE, {
           variables: {
             messageId
           }
         });
 
-        if (getMessageResult.getChatAgentMessage?.error) {
+        if (getMessageResult.getchatMessage?.error) {
           throw new Error(
-            getMessageResult.getChatAgentMessage.error.message ??
+            getMessageResult.getchatMessage.error.message ??
               'Unknown Error'
           );
         }
 
-        if (getMessageResult.getChatAgentMessage?.status === 'DONE') {
-          output = getMessageResult.getChatAgentMessage.output;
-          sessionMemory = getMessageResult.getChatAgentMessage.session
+        if (getMessageResult.getchatMessage?.status === 'DONE') {
+          output = getMessageResult.getchatMessage.output;
+          sessionMemory = getMessageResult.getchatMessage.session
             ?.sessionMemory as SessionMemory;
         }
         attempts--;

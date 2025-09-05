@@ -1,24 +1,20 @@
 export const CREATE_CHAT_SESSION = `#graphql
-  mutation createChatAgentSession {
-    createChatAgentSession {
+  mutation createChatSession {
+    createChatSession {
       id
     }
   }
 `;
 
-export const SEND_CHAT_AGENT_MESSAGE = `#graphql
-  mutation sendChatAgentMessage(
+export const SEND_CHAT_MESSAGE = `#graphql
+  mutation sendChatMessage(
     $input: String!
     $sessionId: String!
-    $typeId: Int
-    $typeName: String
     $token: String!
   ) {
-    sendChatAgentMessage(
+    sendChatMessage(
       input: $input
       sessionId: $sessionId
-      typeId: $typeId
-      typeName: $typeName
       runMode: ALLOW_BACKGROUND
       token: $token
     ) {
@@ -37,9 +33,9 @@ export const SEND_CHAT_AGENT_MESSAGE = `#graphql
   }
 `;
 
-export const GET_CHAT_AGENT_MESSAGE = `#graphql
-  query getChatAgentMessage($messageId: String!) {
-    getChatAgentMessage(messageId: $messageId) {
+export const GET_CHAT_MESSAGE = `#graphql
+  query getChatMessage($messageId: String!) {
+    getChatMessage(messageId: $messageId) {
       error {
         message
       }
@@ -59,6 +55,6 @@ export const GET_CHAT_AGENT_MESSAGE = `#graphql
 
 export const FEEDBACK_MUTATION = `#graphql
   mutation ($messageId: String!, $name: String!, $label: String, $note: String, $updatedBy: String, $createdAt: Float) {
-    sendChatAgentFeedback(messageId: $messageId, name: $name, label: $label, note: $note, updatedBy: $updatedBy, createdAt: $createdAt)
+    sendChatFeedback(messageId: $messageId, name: $name, label: $label, note: $note, updatedBy: $updatedBy, createdAt: $createdAt)
   }
 `;
