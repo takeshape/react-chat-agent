@@ -1,16 +1,23 @@
-import { markdownLookBack } from '@llm-ui/markdown';
-import { useLLMOutput } from '@llm-ui/react';
-import { useCallback } from 'react';
-import { MarkdownComponent } from '../../llm-output/markdown-component.tsx';
+import {
+  type LLMOutputComponent,
+  type LLMOutputFallbackBlock,
+  useLLMOutput
+} from '@llm-ui/react';
+import { useCallback, useMemo } from 'react';
+import type { ChatOutputBlock, ChatOutputFallbackBlock } from './types.ts';
 
 const ICON_SIZE = '20px';
 
-export function LLMOutput({
-  llmOutput,
-  messageId,
-  isStreamFinished,
-  setFeedbackOpen
-}: {
+const SimpleTextComponent: LLMOutputComponent = ({ blockMatch }) => {
+  return <div style={{ whiteSpace: 'pre-wrap' }}>{blockMatch.output}</div>;
+};
+
+const defaultFallbackBlock: LLMOutputFallbackBlock = {
+  component: SimpleTextComponent,
+  lookBack: ({ output }) => ({ output, visibleText: output })
+};
+
+export type LlmOutputProps = {
   llmOutput: string;
   messageId?: string;
   isStreamFinished: boolean;
@@ -20,14 +27,49 @@ export function LLMOutput({
     messageId: string,
     message: string
   ) => void;
-}) {
+  blocks?: ChatOutputBlock[];
+  fallbackBlock?: ChatOutputFallbackBlock;
+};
+
+export function LLMOutput(props: LlmOutputProps) {
+  const {
+    llmOutput,
+    sendMessage,
+    setFeedbackOpen,
+    messageId,
+    isStreamFinished
+  } = props;
+
+  const wrapBlock = useCallback(
+    <T extends ChatOutputFallbackBlock>(
+      block: T
+    ): Omit<T, 'component'> & { component: LLMOutputComponent } => {
+      const Component = block.component;
+      return {
+        ...block,
+        component: ({ blockMatch }) => {
+          return (
+            <Component sendMessage={sendMessage} blockMatch={blockMatch} />
+          );
+        }
+      };
+    },
+    [sendMessage]
+  );
+
+  const fallbackBlock = useMemo(
+    () => props.fallbackBlock && wrapBlock(props.fallbackBlock),
+    [props.fallbackBlock, wrapBlock]
+  );
+  const blocks = useMemo(
+    () => props.blocks?.map(wrapBlock),
+    [props.blocks, wrapBlock]
+  );
+
   const { blockMatches } = useLLMOutput({
     llmOutput,
-    fallbackBlock: {
-      component: MarkdownComponent,
-      lookBack: markdownLookBack()
-    },
-    blocks: [],
+    fallbackBlock: fallbackBlock ?? defaultFallbackBlock,
+    blocks: blocks ?? [],
     isStreamFinished
   });
 

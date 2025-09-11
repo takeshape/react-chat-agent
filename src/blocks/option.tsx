@@ -1,5 +1,6 @@
 import type { BlockMatch } from '@llm-ui/react';
 import { useCallback, useMemo } from 'react';
+import type { ChatOutputBlock } from '../components/ai-chat/types.ts';
 
 export const Option = ({
   blockMatch,
@@ -31,4 +32,31 @@ export const Option = ({
       </button>
     </li>
   );
+};
+
+export const optionsBlock: ChatOutputBlock = {
+  component: ({ blockMatch, sendMessage }) => (
+    <Option blockMatch={blockMatch} sendMessage={sendMessage} />
+  ),
+  findCompleteMatch: (str) => {
+    const execResult = /^\s*\*\s*Option ?\w?:.*$/dgm.exec(str);
+    const firstResult = execResult?.indices?.[0];
+    if (firstResult) {
+      return {
+        startIndex: firstResult[0],
+        endIndex: firstResult[1],
+        outputRaw: execResult[0]
+      };
+    }
+  },
+  findPartialMatch: () => {
+    return undefined;
+  },
+  lookBack: (args) => {
+    const { output } = args;
+    return {
+      output,
+      visibleText: output
+    };
+  }
 };

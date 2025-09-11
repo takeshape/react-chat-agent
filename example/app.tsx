@@ -1,3 +1,4 @@
+import { markdownBlock } from '../src/blocks/markdown.tsx';
 import { AiChatWidget } from '../src/index.ts';
 import './app.css';
 
@@ -14,6 +15,7 @@ const App = () => {
         'Show me air filters',
         'Looking for spark plugs'
       ]}
+      fallbackBlock={markdownBlock}
     />
   );
 };

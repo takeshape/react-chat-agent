@@ -6,6 +6,7 @@ import { ErrorMessage } from './error-message.tsx';
 import { LLMOutput } from './llm-output.tsx';
 import { Loading } from './loading.tsx';
 import Suggestions from './suggestions.tsx';
+import type { ChatOutputBlock, ChatOutputFallbackBlock } from './types.ts';
 
 /**
  * Return true if element is fully in view within container (defaults to window)
@@ -28,11 +29,15 @@ export const isElementInView = (
 export type AiChatProps = {
   welcomeMessage?: string;
   suggestions?: string[];
+  blocks?: ChatOutputBlock[];
+  fallbackBlock?: ChatOutputFallbackBlock;
 } & UseAi;
 
 export default function AiChat({
   welcomeMessage: welcomeMessageProp,
   suggestions,
+  blocks,
+  fallbackBlock,
   session,
   sendMessage,
   mutate,
@@ -156,6 +161,8 @@ export default function AiChat({
                 isStreamFinished={isWelcomeFinished}
                 sendMessage={sendMessage}
                 setFeedbackOpen={setFeedbackOpen}
+                blocks={blocks}
+                fallbackBlock={fallbackBlock}
               />
             </div>
           )}
@@ -176,6 +183,8 @@ export default function AiChat({
                   isStreamFinished={Boolean(item.isStreamFinished)}
                   sendMessage={sendMessage}
                   setFeedbackOpen={setFeedbackOpen}
+                  blocks={blocks}
+                  fallbackBlock={fallbackBlock}
                 />
               )}
             </div>

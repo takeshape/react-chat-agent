@@ -7,6 +7,7 @@ import {
 import AiChat from './ai-chat.tsx';
 import { ErrorBoundary } from './error-boundary.tsx';
 import { Feedback } from './feedback.tsx';
+import type { ChatOutputBlock, ChatOutputFallbackBlock } from './types.ts';
 
 export type AiChatWidgetProps = {
   endpoint: string;
@@ -14,6 +15,8 @@ export type AiChatWidgetProps = {
   email?: string;
   welcomeMessage?: string;
   suggestions?: string[];
+  blocks?: ChatOutputBlock[];
+  fallbackBlock?: ChatOutputFallbackBlock;
 };
 
 /**
@@ -24,7 +27,9 @@ export function AiChatWidget({
   apiKey,
   email,
   welcomeMessage,
-  suggestions
+  suggestions,
+  blocks,
+  fallbackBlock
 }: AiChatWidgetProps) {
   const client = useMemo<TakeShapeClient>(
     () => createTakeShapeClient(endpoint, apiKey),
@@ -87,6 +92,8 @@ export function AiChatWidget({
                 {...aiProps}
                 welcomeMessage={welcomeMessage}
                 suggestions={suggestions}
+                blocks={blocks}
+                fallbackBlock={fallbackBlock}
               />
             </ErrorBoundary>
           </div>

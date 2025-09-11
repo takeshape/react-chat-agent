@@ -23,9 +23,13 @@ export default defineConfig({
     emptyOutDir: true,
     outDir: resolve(__dirname, 'dist'),
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        markdown: resolve(__dirname, 'src/blocks/markdown.tsx'),
+        option: resolve(__dirname, 'src/blocks/option.tsx')
+      },
       formats: ['es'],
-      fileName: () => 'index.js'
+      fileName: (_format, entryName) => `${entryName}.js`
     },
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime'],
