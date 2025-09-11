@@ -1,0 +1,7 @@
+@import "tailwindcss";
+/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind v4 config */
+@source "../src";
+
+.bg-navy {
+  background-color: #00316d;
+}
