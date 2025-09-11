@@ -1,6 +1,6 @@
 {
   "name": "@takeshape/react-chat-agent",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "keywords": [
     "cap.js",
     "captcha.js",
@@ -25,6 +25,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./blocks/markdown": {
+      "types": "./dist/markdown.d.ts",
+      "default": "./dist/markdown.js"
+    },
+    "./blocks/option": {
+      "types": "./dist/option.d.ts",
+      "default": "./dist/option.js"
     }
   },
   "main": "./dist/index.js",
