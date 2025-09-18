@@ -3,4 +3,4 @@ export type {
   ChatOutputBlock,
   ChatOutputComponent,
   ChatOutputFallbackBlock
-} from './components/ai-chat/types';
+} from './types.ts';

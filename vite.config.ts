@@ -26,6 +26,7 @@ export default defineConfig({
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
         markdown: resolve(__dirname, 'src/blocks/markdown.tsx'),
+        reference: resolve(__dirname, 'src/blocks/reference.tsx'),
         option: resolve(__dirname, 'src/blocks/option.tsx')
       },
       formats: ['es'],

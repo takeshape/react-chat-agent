@@ -1,22 +1,5 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
-
-export type HistoryItem =
-  | {
-      type: 'llm';
-      messageId: string;
-      value: string;
-      isStreamFinished?: boolean;
-    }
-  | {
-      type: 'user';
-      value: string;
-    };
-
-export type ChatSession = {
-  history: HistoryItem[];
-  sessionId?: string;
-  expires?: number;
-};
+import type { ChatSession } from '../types.ts';
 
 const SESSION_KEY = 'ai-chat-session';
 

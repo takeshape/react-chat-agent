@@ -1,6 +1,6 @@
 import type { BlockMatch } from '@llm-ui/react';
 import { useCallback, useMemo } from 'react';
-import type { ChatOutputBlock } from '../components/ai-chat/types.ts';
+import type { ChatOutputBlock } from '../types.ts';
 
 export const Option = ({
   blockMatch,

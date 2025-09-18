@@ -1,6 +1,11 @@
 import { type JSX, useCallback, useState } from 'react';
-import type { TakeShapeClient } from '../../takeshape/client';
-import { FEEDBACK_MUTATION } from '../../takeshape/queries';
+import type { TakeShapeClient } from '../../takeshape-client.ts';
+
+export const FEEDBACK_MUTATION = `#graphql
+  mutation ($messageId: String!, $name: String!, $label: String, $note: String, $updatedBy: String, $createdAt: Float) {
+    sendChatFeedback(messageId: $messageId, name: $name, label: $label, note: $note, updatedBy: $updatedBy, createdAt: $createdAt)
+  }
+`;
 
 export type FeedbackProps = {
   client: TakeShapeClient;

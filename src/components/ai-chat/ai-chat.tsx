@@ -1,12 +1,12 @@
 import type { ChangeEventHandler, FormEventHandler } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UseAi } from '../../hooks/use-ai.ts';
+import type { ChatOutputBlock, ChatOutputFallbackBlock } from '../../types.ts';
 import { ChatBubble } from './chat-bubble.tsx';
 import { ErrorMessage } from './error-message.tsx';
 import { LLMOutput } from './llm-output.tsx';
 import { Loading } from './loading.tsx';
 import Suggestions from './suggestions.tsx';
-import type { ChatOutputBlock, ChatOutputFallbackBlock } from './types.ts';
 
 /**
  * Return true if element is fully in view within container (defaults to window)
@@ -33,24 +33,28 @@ export type AiChatProps = {
   fallbackBlock?: ChatOutputFallbackBlock;
 } & UseAi;
 
-export default function AiChat({
-  welcomeMessage: welcomeMessageProp,
-  suggestions,
-  blocks,
-  fallbackBlock,
-  session,
-  sendMessage,
-  mutate,
-  reset,
-  error,
-  loading,
-  setLoading,
-  inputText,
-  setInputText,
-  inputRef,
-  setFeedbackOpen
-}: AiChatProps) {
-  const { history = [], sessionId } = session ?? {};
+export default function AiChat(props: AiChatProps) {
+  const {
+    welcomeMessage: welcomeMessageProp,
+    suggestions,
+    blocks,
+    fallbackBlock,
+    sendMessage,
+    mutate,
+    reset,
+    error,
+    loading,
+    setLoading,
+    inputText,
+    setInputText,
+    inputRef,
+    setFeedbackOpen
+  } = props;
+  const session = useMemo(
+    () => props.session ?? { history: [] },
+    [props.session]
+  );
+  const { history, sessionId } = session;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentMessageRef = useRef<HTMLDivElement>(null);
   const [welcomeProgress, setWelcomeProgress] = useState(0);
@@ -163,6 +167,7 @@ export default function AiChat({
                 setFeedbackOpen={setFeedbackOpen}
                 blocks={blocks}
                 fallbackBlock={fallbackBlock}
+                session={session}
               />
             </div>
           )}
@@ -185,6 +190,7 @@ export default function AiChat({
                   setFeedbackOpen={setFeedbackOpen}
                   blocks={blocks}
                   fallbackBlock={fallbackBlock}
+                  session={session}
                 />
               )}
             </div>

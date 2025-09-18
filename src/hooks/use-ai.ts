@@ -1,16 +1,67 @@
 import { getCapToken } from '@takeshape/use-cap';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { TakeShapeClient } from '../takeshape/client';
-import {
-  CREATE_CHAT_SESSION,
-  GET_CHAT_MESSAGE,
-  SEND_CHAT_MESSAGE
-} from '../takeshape/queries';
-import { type HistoryItem, useAiSession } from './use-ai-session';
+import type { TakeShapeClient } from '../takeshape-client.ts';
+import type { HistoryItem, Reference, ReferenceData } from '../types.ts';
+import { useAiSession } from './use-ai-session';
 
 const POLLING_INTERVAL = 100;
 const POLLING_MAX_WAIT = 1000 * 60 * 5; // 5 minutes
 const POLLING_MAX_ATTEMPTS = POLLING_MAX_WAIT / POLLING_INTERVAL;
+
+export const CREATE_CHAT_SESSION = `#graphql
+  mutation createChatSession {
+    createChatSession {
+      id
+    }
+  }
+`;
+
+export const SEND_CHAT_MESSAGE = `#graphql
+  mutation sendChatMessage(
+    $input: String!
+    $sessionId: String!
+    $token: String!
+  ) {
+    sendChatMessage(
+      input: $input
+      sessionId: $sessionId
+      runMode: ALLOW_BACKGROUND
+      token: $token
+    ) {
+      messageId
+      session {
+        id
+        sessionMemory
+      }
+      output {
+        content
+        references {
+          _tid
+        }
+      }
+    }
+  }
+`;
+
+export const GET_CHAT_MESSAGE = `#graphql
+  query getChatMessage($messageId: String!) {
+    getChatMessage(messageId: $messageId) {
+      error {
+        message
+      }
+      session {
+        sessionMemory
+      }
+      output {
+        content
+        references {
+          _tid
+        }
+      }
+      status
+    }
+  }
+`;
 
 type SessionMemory = Record<string, unknown>;
 
@@ -153,7 +204,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
 
   const [error, setError] = useState<Error | null>(null);
 
-  const { history = [], sessionId } = session ?? {};
+  const { history, references, sessionId } = session ?? {};
 
   useEffect(() => {
     void initProtectionToken();
@@ -167,7 +218,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
 
         if (result.output) {
           const newHistory: HistoryItem[] = [
-            ...history,
+            ...(history ?? []),
             {
               type: 'llm',
               value: result.output.content,
@@ -176,9 +227,19 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
             }
           ];
 
+          const newReferences: Record<string, ReferenceData> = {
+            ...references
+          };
+
+          result.output.references?.forEach((reference: Reference) => {
+            newReferences[reference._tid] = reference.data;
+          });
+
           setSession({
             history: newHistory,
-            sessionId: result.sessionId
+            sessionId: result.sessionId,
+            sessionMemory: result.sessionMemory,
+            references: newReferences
           });
         }
 
@@ -191,7 +252,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
         setLoading(false);
       }
     },
-    [client, history, setSession]
+    [client, history, references, setSession]
   );
 
   const reset = useCallback(() => {
@@ -202,7 +263,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
     (message: string, newSession = false) => {
       if (!protectionToken) return;
       setLoading(true);
-      const newHistory: HistoryItem[] = newSession ? [] : history;
+      const newHistory: HistoryItem[] = newSession ? [] : (history ?? []);
       newHistory.push({
         type: 'user',
         value: message

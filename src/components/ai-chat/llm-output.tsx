@@ -4,7 +4,11 @@ import {
   useLLMOutput
 } from '@llm-ui/react';
 import { useCallback, useMemo } from 'react';
-import type { ChatOutputBlock, ChatOutputFallbackBlock } from './types.ts';
+import type {
+  ChatOutputBlock,
+  ChatOutputFallbackBlock,
+  ChatSession
+} from '../../types.ts';
 
 const ICON_SIZE = '20px';
 
@@ -29,6 +33,7 @@ export type LlmOutputProps = {
   ) => void;
   blocks?: ChatOutputBlock[];
   fallbackBlock?: ChatOutputFallbackBlock;
+  session: ChatSession;
 };
 
 export function LLMOutput(props: LlmOutputProps) {
@@ -37,7 +42,8 @@ export function LLMOutput(props: LlmOutputProps) {
     sendMessage,
     setFeedbackOpen,
     messageId,
-    isStreamFinished
+    isStreamFinished,
+    session
   } = props;
 
   const wrapBlock = useCallback(
@@ -49,12 +55,16 @@ export function LLMOutput(props: LlmOutputProps) {
         ...block,
         component: ({ blockMatch }) => {
           return (
-            <Component sendMessage={sendMessage} blockMatch={blockMatch} />
+            <Component
+              sendMessage={sendMessage}
+              blockMatch={blockMatch}
+              session={session}
+            />
           );
         }
       };
     },
-    [sendMessage]
+    [sendMessage, session]
   );
 
   const fallbackBlock = useMemo(
