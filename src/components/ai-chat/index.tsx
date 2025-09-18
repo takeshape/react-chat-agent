@@ -97,7 +97,7 @@ export function AiChatWidget({
         <div
           className={`${positionClasses} w-96 z-30 bg-white border-2 border-black rounded-md`}
         >
-          <div className="flex justify-end gap-4 bg-navy px-3 py-1 text-white">
+          <div className="flex justify-end gap-4 bg-blue-800 px-3 py-1 text-white">
             <button
               type="button"
               className="hover:underline cursor-pointer"
