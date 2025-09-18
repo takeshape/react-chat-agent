@@ -1,11 +1,13 @@
 import { resolve } from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import preserveUseClientDirective from 'rollup-plugin-preserve-use-client';
 import dts from 'vite-plugin-dts';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [
+    preserveUseClientDirective(),
     tailwindcss(),
     react(),
     dts({
