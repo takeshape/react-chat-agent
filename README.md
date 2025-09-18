@@ -122,6 +122,28 @@ The component handles various error states:
 
 All errors display user-friendly messages with retry functionality.
 
+## Markdown Support
+
+The library provides a `markdownBlock` that can be used as a fallback block for rendering markdown content in AI responses. This block uses `react-markdown` with GitHub Flavored Markdown support.
+
+### Usage
+
+```tsx
+import { AiChatWidget } from '@takeshape/react-chat-agent';
+import { markdownBlock } from '@takeshape/react-chat-agent/blocks/markdown';
+
+function App() {
+  return (
+    <AiChatWidget
+      endpoint="https://api.takeshape.io/project/<your-project-id>/production/graphql"
+      apiKey="your-api-key"
+      welcomeMessage="Welcome! How can I help you today?"
+      fallbackBlock={markdownBlock}
+    />
+  );
+}
+```
+
 ## Development
 
 See the `example/` directory for a complete implementation example.
