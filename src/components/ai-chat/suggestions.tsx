@@ -21,21 +21,15 @@ export default function Suggestions(props: {
   suggestions?: string[];
 }) {
   const { sendMessage, suggestions } = props;
-
-  // Use default suggestions if none provided
-  const defaultSuggestions = [
-    "I'm looking for oil for my car",
-    "I'm looking for wiper blades"
-  ];
-
-  const suggestionsToShow =
-    suggestions && suggestions.length > 0 ? suggestions : defaultSuggestions;
+  if (!suggestions?.length) {
+    return null;
+  }
 
   return (
     <div className="bg-gray-100 p-2 rounded-lg">
       <p className="mb-2">You can ask questions like...</p>
       <ul className="list-disc pl-4">
-        {suggestionsToShow.map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <li key={suggestion}>
             <Suggestion sendMessage={sendMessage} message={suggestion} />
           </li>
