@@ -1,6 +1,9 @@
 import { useMemo } from 'react';
-import { createTakeShapeClient, type TakeShapeClient } from '../../client.ts';
 import { useAi } from '../../hooks/use-ai';
+import {
+  createTakeShapeClient,
+  type TakeShapeClient
+} from '../../takeshape-client.ts';
 import type { ChatOutputBlock, ChatOutputFallbackBlock } from '../../types.ts';
 import AiChat from './ai-chat.tsx';
 import { ErrorBoundary } from './error-boundary.tsx';
