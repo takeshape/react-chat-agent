@@ -42,6 +42,7 @@ The main component that provides a complete chat interface with a toggleable wid
 | `email` | `string` | ❌ | User email for feedback attribution |
 | `welcomeMessage` | `string` | ❌ | Initial message displayed when chat opens |
 | `suggestions` | `string[]` | ❌ | Pre-defined message suggestions shown when chat is empty |
+| `position` | `'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right'` | ❌ | Position of the chat widget on screen (defaults to `'bottom-right'`) |
 
 ### Features
 
@@ -90,6 +91,16 @@ The component uses Tailwind CSS.
   apiKey="your-api-key"
   email="user@example.com"
   welcomeMessage="Hello! How can I assist you today?"
+/>
+```
+
+#### With Custom Position
+```tsx
+<AiChatWidget
+  endpoint="https://api.takeshape.io/project/<your-project-id>/production/graphql"
+  apiKey="your-api-key"
+  position="top-right"
+  welcomeMessage="Chat with our AI assistant!"
 />
 ```
 

@@ -1,4 +1,24 @@
 import { useMemo } from 'react';
+
+export type AiChatWidgetPosition =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
+
+function getPositionClasses(position?: AiChatWidgetPosition) {
+  switch (position) {
+    case 'top-left':
+      return 'top-4 left-4';
+    case 'top-right':
+      return 'top-4 right-4';
+    case 'bottom-left':
+      return 'bottom-4 left-4';
+    default:
+      return 'bottom-4 right-4';
+  }
+}
+
 import { useAi } from '../../hooks/use-ai';
 import {
   createTakeShapeClient,
@@ -17,6 +37,7 @@ export type AiChatWidgetProps = {
   suggestions?: string[];
   blocks?: ChatOutputBlock[];
   fallbackBlock?: ChatOutputFallbackBlock;
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 };
 
 /**
@@ -29,7 +50,8 @@ export function AiChatWidget({
   welcomeMessage,
   suggestions,
   blocks,
-  fallbackBlock
+  fallbackBlock,
+  position = 'bottom-right'
 }: AiChatWidgetProps) {
   const client = useMemo<TakeShapeClient>(
     () => createTakeShapeClient(endpoint, apiKey),
@@ -39,6 +61,11 @@ export function AiChatWidget({
   const capEndpoint = useMemo(
     () => `${new URL(endpoint).origin}/protection/cap/`,
     [endpoint]
+  );
+
+  const positionClasses = useMemo(
+    () => `fixed ${getPositionClasses(position)}`,
+    [position]
   );
 
   const aiProps = useAi(client, capEndpoint);
@@ -58,7 +85,7 @@ export function AiChatWidget({
       {!aiChatOpen && (
         <button
           type="button"
-          className="fixed bottom-4 left-4 w-48 z-30 bg-white p-2 border-2 border-black rounded-md cursor-pointer"
+          className={`${positionClasses} w-48 z-30 bg-white p-2 border-2 border-black rounded-md cursor-pointer`}
           onClick={() => {
             setAiChatOpen(true);
           }}
@@ -67,7 +94,9 @@ export function AiChatWidget({
         </button>
       )}
       {aiChatOpen && (
-        <div className="fixed bottom-4 left-4 w-96 z-30 bg-white border-2 border-black rounded-md">
+        <div
+          className={`${positionClasses} w-96 z-30 bg-white border-2 border-black rounded-md`}
+        >
           <div className="flex justify-end gap-4 bg-navy px-3 py-1 text-white">
             <button
               type="button"
