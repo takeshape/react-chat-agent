@@ -33,6 +33,10 @@
     "./blocks/option": {
       "types": "./dist/option.d.ts",
       "default": "./dist/option.js"
+    },
+    "./blocks/reference": {
+      "types": "./dist/reference.d.ts",
+      "default": "./dist/reference.js"
     }
   },
   "main": "./dist/index.js",
