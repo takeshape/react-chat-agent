@@ -1,3 +1,4 @@
+import { Kind, parse } from '@0no-co/graphql.web';
 import { getCapToken } from '@takeshape/use-cap';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TakeShapeClient } from '../takeshape-client.ts';
@@ -13,12 +14,42 @@ const POLLING_INTERVAL = 100;
 const POLLING_MAX_WAIT = 1000 * 60 * 5; // 5 minutes
 const POLLING_MAX_ATTEMPTS = POLLING_MAX_WAIT / POLLING_INTERVAL;
 
-function createDynamicQueries(agentName: string, inputName: string) {
+function parseReferenceDataFragment(referenceDataFragment: string) {
+  const ast = parse(referenceDataFragment);
+  const fragmentDefinition = ast.definitions.find(
+    (node) => node.kind === Kind.FRAGMENT_DEFINITION
+  );
+  if (!fragmentDefinition) {
+    throw new Error('"fragmentDefinition" must contain a fragment definition');
+  }
+  if (fragmentDefinition.typeCondition.name.value !== 'TSSearchable') {
+    throw new Error(
+      '"fragmentDefinition" must contain a TSSearchable type condition'
+    );
+  }
+  return fragmentDefinition.name.value;
+}
+
+function createDynamicQueries(
+  agentName: string,
+  inputName: string,
+  referenceDataFragment: string = ''
+) {
+  let dataSelection = '';
+  if (referenceDataFragment) {
+    const fragmentName = parseReferenceDataFragment(referenceDataFragment);
+    dataSelection = `
+    data {
+        ... ${fragmentName}
+    }
+    `;
+  }
+
   const createSessionName = getCreateSessionName(agentName);
   const sendMessageName = getSendMessageName(inputName);
   const getMessageName = getGetMessageName(inputName);
 
-  const createSession = `#graphql
+  const createSession = `
     mutation ${createSessionName} {
       ${createSessionName} {
         id
@@ -26,7 +57,7 @@ function createDynamicQueries(agentName: string, inputName: string) {
     }
   `;
 
-  const sendMessage = `#graphql
+  const sendMessage = `
     mutation ${sendMessageName}(
       $input: String!
       $sessionId: String!
@@ -47,13 +78,15 @@ function createDynamicQueries(agentName: string, inputName: string) {
           content
           references {
             _tid
+            ${dataSelection}
           }
         }
       }
     }
+    ${referenceDataFragment}
   `;
 
-  const getMessage = `#graphql
+  const getMessage = `
     query ${getMessageName}($messageId: String!) {
       ${getMessageName}(messageId: $messageId) {
         error {
@@ -66,11 +99,13 @@ function createDynamicQueries(agentName: string, inputName: string) {
           content
           references {
             _tid
+            ${dataSelection}
           }
         }
         status
       }
     }
+    ${referenceDataFragment}
   `;
 
   return {
@@ -178,15 +213,21 @@ const getMutationFn =
     };
   };
 
-export const useAi = (
-  client: TakeShapeClient,
-  capEndpoint: string,
-  agentName: string = 'chat',
-  inputName: string = 'chat'
-) => {
+export type UseAiProps = {
+  client: TakeShapeClient;
+  capEndpoint: string;
+  agentName: string;
+  inputName: string;
+  referenceDataFragment?: string;
+};
+
+export const useAi = (props: UseAiProps) => {
+  const { client, capEndpoint, agentName, inputName, referenceDataFragment } =
+    props;
+
   const queries = useMemo(
-    () => createDynamicQueries(agentName, inputName),
-    [agentName, inputName]
+    () => createDynamicQueries(agentName, inputName, referenceDataFragment),
+    [agentName, inputName, referenceDataFragment]
   );
 
   // UI State

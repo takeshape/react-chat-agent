@@ -2,6 +2,14 @@ import { markdownBlock } from '../src/blocks/markdown.tsx';
 import { AiChatWidget } from '../src/index.ts';
 import './app.css';
 
+const fragment = `
+fragment Product on TSSearchable {
+  ... on Shopify_Product {
+    title
+  }
+}
+`;
+
 const App = () => {
   const { VITE_TS_API_ENDPOINT, VITE_TS_API_KEY } = import.meta.env;
   return (
@@ -16,6 +24,7 @@ const App = () => {
         'Looking for spark plugs'
       ]}
       fallbackBlock={markdownBlock}
+      referenceDataFragment={fragment}
     />
   );
 };

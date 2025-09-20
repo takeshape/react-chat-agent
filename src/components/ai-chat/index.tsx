@@ -40,6 +40,7 @@ export type AiChatWidgetProps = {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   agentName?: string;
   inputName?: string;
+  referenceDataFragment?: string;
 };
 
 /**
@@ -55,7 +56,8 @@ export function AiChatWidget({
   fallbackBlock,
   position = 'bottom-right',
   agentName = 'chat',
-  inputName = 'chat'
+  inputName = 'chat',
+  referenceDataFragment
 }: AiChatWidgetProps) {
   const client = useMemo<TakeShapeClient>(
     () => createTakeShapeClient(endpoint, apiKey),
@@ -72,7 +74,13 @@ export function AiChatWidget({
     [position]
   );
 
-  const aiProps = useAi(client, capEndpoint, agentName, inputName);
+  const aiProps = useAi({
+    client,
+    capEndpoint,
+    agentName,
+    inputName,
+    referenceDataFragment
+  });
   const {
     resetSession,
     aiChatOpen,
