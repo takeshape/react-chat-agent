@@ -38,6 +38,8 @@ export type AiChatWidgetProps = {
   blocks?: ChatOutputBlock[];
   fallbackBlock?: ChatOutputFallbackBlock;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  agentName?: string;
+  inputName?: string;
 };
 
 /**
@@ -51,7 +53,9 @@ export function AiChatWidget({
   suggestions,
   blocks,
   fallbackBlock,
-  position = 'bottom-right'
+  position = 'bottom-right',
+  agentName = 'chat',
+  inputName = 'chat'
 }: AiChatWidgetProps) {
   const client = useMemo<TakeShapeClient>(
     () => createTakeShapeClient(endpoint, apiKey),
@@ -68,7 +72,7 @@ export function AiChatWidget({
     [position]
   );
 
-  const aiProps = useAi(client, capEndpoint);
+  const aiProps = useAi(client, capEndpoint, agentName, inputName);
   const {
     resetSession,
     aiChatOpen,
@@ -136,6 +140,7 @@ export function AiChatWidget({
           selectedMessageId={selectedMessageId}
           selectedMessage={selectedMessage}
           isPositive={isPositive}
+          agentName={agentName}
         />
       )}
     </>

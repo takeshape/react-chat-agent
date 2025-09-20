@@ -1,67 +1,87 @@
 import { getCapToken } from '@takeshape/use-cap';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TakeShapeClient } from '../takeshape-client.ts';
 import type { HistoryItem, Reference, ReferenceData } from '../types.ts';
+import {
+  getCreateSessionName,
+  getGetMessageName,
+  getSendMessageName
+} from '../utils/query-names.ts';
 import { useAiSession } from './use-ai-session';
 
 const POLLING_INTERVAL = 100;
 const POLLING_MAX_WAIT = 1000 * 60 * 5; // 5 minutes
 const POLLING_MAX_ATTEMPTS = POLLING_MAX_WAIT / POLLING_INTERVAL;
 
-export const CREATE_CHAT_SESSION = `#graphql
-  mutation createChatSession {
-    createChatSession {
-      id
-    }
-  }
-`;
+function createDynamicQueries(agentName: string, inputName: string) {
+  const createSessionName = getCreateSessionName(agentName);
+  const sendMessageName = getSendMessageName(inputName);
+  const getMessageName = getGetMessageName(inputName);
 
-export const SEND_CHAT_MESSAGE = `#graphql
-  mutation sendChatMessage(
-    $input: String!
-    $sessionId: String!
-    $token: String!
-  ) {
-    sendChatMessage(
-      input: $input
-      sessionId: $sessionId
-      runMode: ALLOW_BACKGROUND
-      token: $token
-    ) {
-      messageId
-      session {
+  const createSession = `#graphql
+    mutation ${createSessionName} {
+      ${createSessionName} {
         id
-        sessionMemory
-      }
-      output {
-        content
-        references {
-          _tid
-        }
       }
     }
-  }
-`;
+  `;
 
-export const GET_CHAT_MESSAGE = `#graphql
-  query getChatMessage($messageId: String!) {
-    getChatMessage(messageId: $messageId) {
-      error {
-        message
-      }
-      session {
-        sessionMemory
-      }
-      output {
-        content
-        references {
-          _tid
+  const sendMessage = `#graphql
+    mutation ${sendMessageName}(
+      $input: String!
+      $sessionId: String!
+      $token: String!
+    ) {
+      ${sendMessageName}(
+        input: $input
+        sessionId: $sessionId
+        runMode: ALLOW_BACKGROUND
+        token: $token
+      ) {
+        messageId
+        session {
+          id
+          sessionMemory
+        }
+        output {
+          content
+          references {
+            _tid
+          }
         }
       }
-      status
     }
-  }
-`;
+  `;
+
+  const getMessage = `#graphql
+    query ${getMessageName}($messageId: String!) {
+      ${getMessageName}(messageId: $messageId) {
+        error {
+          message
+        }
+        session {
+          sessionMemory
+        }
+        output {
+          content
+          references {
+            _tid
+          }
+        }
+        status
+      }
+    }
+  `;
+
+  return {
+    createSession,
+    sendMessage,
+    getMessage,
+    createSessionName,
+    sendMessageName,
+    getMessageName
+  };
+}
 
 type SessionMemory = Record<string, unknown>;
 
@@ -78,21 +98,31 @@ export type MutationArgs = {
   typeName?: string;
 };
 
+type QuerySet = {
+  createSession: string;
+  sendMessage: string;
+  getMessage: string;
+  createSessionName: string;
+  sendMessageName: string;
+  getMessageName: string;
+};
+
 const getMutationFn =
-  (client: TakeShapeClient) => async (args: MutationArgs) => {
+  (client: TakeShapeClient, queries: QuerySet) =>
+  async (args: MutationArgs) => {
     const { input, token } = args;
     let sessionId = args.sessionId;
 
     if (!sessionId) {
-      const createSessionResult = await client.mutation(CREATE_CHAT_SESSION);
-      sessionId = createSessionResult.createChatSession?.id;
+      const createSessionResult = await client.mutation(queries.createSession);
+      sessionId = createSessionResult[queries.createSessionName]?.id;
     }
 
     if (!sessionId) {
       throw new Error('No session ID');
     }
 
-    const sendMessageResult = await client.mutation(SEND_CHAT_MESSAGE, {
+    const sendMessageResult = await client.mutation(queries.sendMessage, {
       variables: {
         input,
         sessionId,
@@ -100,10 +130,10 @@ const getMutationFn =
       }
     });
 
-    const messageId = sendMessageResult.sendChatMessage?.messageId;
-    let output = sendMessageResult.sendChatMessage?.output;
-    let sessionMemory = sendMessageResult.sendChatMessage?.session
-      .sessionMemory as SessionMemory;
+    const sendMessageData = sendMessageResult[queries.sendMessageName];
+    const messageId = sendMessageData?.messageId;
+    let output = sendMessageData?.output;
+    let sessionMemory = sendMessageData?.session.sessionMemory as SessionMemory;
 
     if (!output) {
       let attempts = POLLING_MAX_ATTEMPTS;
@@ -115,21 +145,20 @@ const getMutationFn =
       while (!output && attempts > 0) {
         await sleep(POLLING_INTERVAL);
 
-        const getMessageResult = await client.query(GET_CHAT_MESSAGE, {
+        const getMessageResult = await client.query(queries.getMessage, {
           variables: {
             messageId
           }
         });
+        const getMessageData = getMessageResult[queries.getMessageName];
 
-        if (getMessageResult.getchatMessage?.error) {
-          throw new Error(
-            getMessageResult.getchatMessage.error.message ?? 'Unknown Error'
-          );
+        if (getMessageData?.error) {
+          throw new Error(getMessageData.error.message ?? 'Unknown Error');
         }
 
-        if (getMessageResult.getchatMessage?.status === 'DONE') {
-          output = getMessageResult.getchatMessage.output;
-          sessionMemory = getMessageResult.getchatMessage.session
+        if (getMessageData?.status === 'DONE') {
+          output = getMessageData.output;
+          sessionMemory = getMessageData.session
             ?.sessionMemory as SessionMemory;
         }
         attempts--;
@@ -149,7 +178,17 @@ const getMutationFn =
     };
   };
 
-export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
+export const useAi = (
+  client: TakeShapeClient,
+  capEndpoint: string,
+  agentName: string = 'chat',
+  inputName: string = 'chat'
+) => {
+  const queries = useMemo(
+    () => createDynamicQueries(agentName, inputName),
+    [agentName, inputName]
+  );
+
   // UI State
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -214,7 +253,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
     async (args: MutationArgs) => {
       try {
         setError(null);
-        const result = await getMutationFn(client)(args);
+        const result = await getMutationFn(client, queries)(args);
 
         if (result.output) {
           const newHistory: HistoryItem[] = [
@@ -252,7 +291,7 @@ export const useAi = (client: TakeShapeClient, capEndpoint: string) => {
         setLoading(false);
       }
     },
-    [client, history, references, setSession]
+    [client, queries, history, references, setSession]
   );
 
   const reset = useCallback(() => {

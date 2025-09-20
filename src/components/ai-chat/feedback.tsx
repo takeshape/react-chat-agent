@@ -1,11 +1,15 @@
-import { type JSX, useCallback, useState } from 'react';
+import { type JSX, useCallback, useMemo, useState } from 'react';
 import type { TakeShapeClient } from '../../takeshape-client.ts';
+import { getSendFeedbackName } from '../../utils/query-names.ts';
 
-export const FEEDBACK_MUTATION = `#graphql
-  mutation ($messageId: String!, $name: String!, $label: String, $note: String, $updatedBy: String, $createdAt: Float) {
-    sendChatFeedback(messageId: $messageId, name: $name, label: $label, note: $note, updatedBy: $updatedBy, createdAt: $createdAt)
-  }
-`;
+function createFeedbackMutation(agentName: string) {
+  const feedbackName = getSendFeedbackName(agentName);
+  return `#graphql
+    mutation ($messageId: String!, $name: String!, $label: String, $note: String, $updatedBy: String, $createdAt: Float) {
+      ${feedbackName}(messageId: $messageId, name: $name, label: $label, note: $note, updatedBy: $updatedBy, createdAt: $createdAt)
+    }
+  `;
+}
 
 export type FeedbackProps = {
   client: TakeShapeClient;
@@ -14,6 +18,7 @@ export type FeedbackProps = {
   selectedMessageId: string | null;
   selectedMessage: string | null;
   isPositive: boolean | null;
+  agentName: string;
 };
 
 /**
@@ -25,12 +30,18 @@ export function Feedback({
   setFeedbackClosed,
   selectedMessageId,
   selectedMessage,
-  isPositive
+  isPositive,
+  agentName
 }: FeedbackProps) {
   const [userMessage, setUserMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isPending, setIsPending] = useState(false);
+
+  const feedbackMutation = useMemo(
+    () => createFeedbackMutation(agentName),
+    [agentName]
+  );
 
   const mutate = useCallback(async () => {
     if (!selectedMessageId) return;
@@ -52,14 +63,21 @@ export function Feedback({
         variables.updatedBy = email;
       }
 
-      await client.mutation(FEEDBACK_MUTATION, { variables });
+      await client.mutation(feedbackMutation, { variables });
       setIsSuccess(true);
     } catch (_error) {
       setIsError(true);
     } finally {
       setIsPending(false);
     }
-  }, [userMessage, client, selectedMessageId, isPositive, email]);
+  }, [
+    userMessage,
+    client,
+    selectedMessageId,
+    isPositive,
+    email,
+    feedbackMutation
+  ]);
 
   let content: JSX.Element;
   if (isPending) {
