@@ -1,3 +1,4 @@
+'use client';
 import { markdownLookBack } from '@llm-ui/markdown';
 import type { LLMOutputComponent, LLMOutputFallbackBlock } from '@llm-ui/react';
 import ReactMarkdown from 'react-markdown';

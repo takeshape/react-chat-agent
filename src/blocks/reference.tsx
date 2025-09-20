@@ -1,3 +1,4 @@
+'use client';
 import type { LLMOutputComponent } from '@llm-ui/react';
 import type { ChatContext, ChatOutputBlock } from '../types.ts';
 

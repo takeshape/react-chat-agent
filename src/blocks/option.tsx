@@ -1,3 +1,4 @@
+'use client';
 import type { BlockMatch } from '@llm-ui/react';
 import { useCallback, useMemo } from 'react';
 import type { ChatOutputBlock } from '../types.ts';
