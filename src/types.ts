@@ -48,3 +48,7 @@ export type ChatOutputFallbackBlock = Omit<
 export type ChatOutputBlock = Omit<LLMOutputBlock, 'component'> & {
   component: ChatOutputComponent;
 };
+
+export type MessageResponse = ChatSession & {
+  lastMessage: HistoryItem;
+};

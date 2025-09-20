@@ -2,7 +2,12 @@ import { Kind, parse } from '@0no-co/graphql.web';
 import { getCapToken } from '@takeshape/use-cap';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TakeShapeClient } from '../takeshape-client.ts';
-import type { HistoryItem, Reference, ReferenceData } from '../types.ts';
+import type {
+  HistoryItem,
+  MessageResponse,
+  Reference,
+  ReferenceData
+} from '../types.ts';
 import {
   getCreateSessionName,
   getGetMessageName,
@@ -219,11 +224,18 @@ export type UseAiProps = {
   agentName: string;
   inputName: string;
   referenceDataFragment?: string;
+  onMessageResponse?: (response: MessageResponse) => void;
 };
 
 export const useAi = (props: UseAiProps) => {
-  const { client, capEndpoint, agentName, inputName, referenceDataFragment } =
-    props;
+  const {
+    client,
+    capEndpoint,
+    agentName,
+    inputName,
+    referenceDataFragment,
+    onMessageResponse
+  } = props;
 
   const queries = useMemo(
     () => createDynamicQueries(agentName, inputName, referenceDataFragment),
@@ -297,15 +309,13 @@ export const useAi = (props: UseAiProps) => {
         const result = await getMutationFn(client, queries)(args);
 
         if (result.output) {
-          const newHistory: HistoryItem[] = [
-            ...(history ?? []),
-            {
-              type: 'llm',
-              value: result.output.content,
-              messageId: result.messageId,
-              isStreamFinished: result.isStreamFinished
-            }
-          ];
+          const lastMessage: HistoryItem = {
+            type: 'llm',
+            value: result.output.content,
+            messageId: result.messageId,
+            isStreamFinished: result.isStreamFinished
+          };
+          const newHistory: HistoryItem[] = [...(history ?? []), lastMessage];
 
           const newReferences: Record<string, ReferenceData> = {
             ...references
@@ -315,12 +325,17 @@ export const useAi = (props: UseAiProps) => {
             newReferences[reference._tid] = reference.data;
           });
 
-          setSession({
+          const session = {
             history: newHistory,
             sessionId: result.sessionId,
             sessionMemory: result.sessionMemory,
             references: newReferences
+          };
+          onMessageResponse?.({
+            ...session,
+            lastMessage
           });
+          setSession(session);
         }
 
         setLoading(false);
@@ -332,7 +347,7 @@ export const useAi = (props: UseAiProps) => {
         setLoading(false);
       }
     },
-    [client, queries, history, references, setSession]
+    [client, queries, history, references, setSession, onMessageResponse]
   );
 
   const reset = useCallback(() => {

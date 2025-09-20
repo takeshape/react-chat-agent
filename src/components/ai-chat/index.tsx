@@ -24,7 +24,11 @@ import {
   createTakeShapeClient,
   type TakeShapeClient
 } from '../../takeshape-client.ts';
-import type { ChatOutputBlock, ChatOutputFallbackBlock } from '../../types.ts';
+import type {
+  ChatOutputBlock,
+  ChatOutputFallbackBlock,
+  MessageResponse
+} from '../../types.ts';
 import AiChat from './ai-chat.tsx';
 import { ErrorBoundary } from './error-boundary.tsx';
 import { Feedback } from './feedback.tsx';
@@ -41,6 +45,7 @@ export type AiChatWidgetProps = {
   agentName?: string;
   inputName?: string;
   referenceDataFragment?: string;
+  onMessageResponse?: (response: MessageResponse) => void;
 };
 
 /**
@@ -57,7 +62,8 @@ export function AiChatWidget({
   position = 'bottom-right',
   agentName = 'chat',
   inputName = 'chat',
-  referenceDataFragment
+  referenceDataFragment,
+  onMessageResponse
 }: AiChatWidgetProps) {
   const client = useMemo<TakeShapeClient>(
     () => createTakeShapeClient(endpoint, apiKey),
@@ -79,7 +85,8 @@ export function AiChatWidget({
     capEndpoint,
     agentName,
     inputName,
-    referenceDataFragment
+    referenceDataFragment,
+    onMessageResponse
   });
   const {
     resetSession,
