@@ -109,7 +109,6 @@ The component uses Tailwind CSS.
 The `AiChatWidget` consists of several key components:
 
 - **Chat Interface**: Main chat UI with message history and input form
-- **State Management**: Zustand-based stores for chat state and TakeShape client
 - **Session Persistence**: Automatic session saving/loading with localStorage
 - **Bot Protection**: Integrated proof-of-work token generation
 - **Error Boundaries**: React error boundaries for graceful error handling
@@ -120,7 +119,6 @@ The `AiChatWidget` consists of several key components:
 The component integrates with TakeShape's GraphQL API for:
 - Creating and managing chat sessions
 - Sending messages and receiving AI responses
-- Polling for streaming response updates
 - Submitting message feedback
 
 ### Error Handling
