@@ -1,6 +1,7 @@
 import type { ChangeEventHandler, FormEventHandler } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UseAi } from '../../hooks/use-ai.ts';
+import type { AiChatTheme } from '../../types/theme.ts';
 import type { ChatOutputBlock, ChatOutputFallbackBlock } from '../../types.ts';
 import { ChatBubble } from './chat-bubble.tsx';
 import { ErrorMessage } from './error-message.tsx';
@@ -31,6 +32,7 @@ export type AiChatProps = {
   suggestions?: string[];
   blocks?: ChatOutputBlock[];
   fallbackBlock?: ChatOutputFallbackBlock;
+  theme?: Required<AiChatTheme>;
 } & UseAi;
 
 export default function AiChat(props: AiChatProps) {
@@ -39,6 +41,7 @@ export default function AiChat(props: AiChatProps) {
     suggestions,
     blocks,
     fallbackBlock,
+    theme,
     sendMessage,
     mutate,
     reset,
@@ -180,7 +183,9 @@ export default function AiChat(props: AiChatProps) {
               }
               ref={index === history.length - 1 ? currentMessageRef : undefined}
             >
-              {item.type === 'user' && <ChatBubble text={item.value} />}
+              {item.type === 'user' && (
+                <ChatBubble text={item.value} theme={theme} />
+              )}
               {item.type === 'llm' && (
                 <LLMOutput
                   llmOutput={item.value}
@@ -212,7 +217,12 @@ export default function AiChat(props: AiChatProps) {
             placeholder="Message"
             value={inputText}
             onChange={changeMessage}
-            className="w-[100%] p-1 border-1 border-gray-500"
+            className="w-[100%] p-1 border-1"
+            style={{
+              borderColor: theme?.input.borderColor,
+              backgroundColor: theme?.input.backgroundColor,
+              color: theme?.input.textColor
+            }}
             disabled={loading}
             ref={inputRef}
           />
@@ -223,11 +233,23 @@ export default function AiChat(props: AiChatProps) {
             className="ml-2"
           >
             <svg
-              className="fill-transparent stroke-neutral-600 w-6"
+              className="fill-transparent w-6"
+              style={{ stroke: theme?.sendButton.iconColor }}
               width="24px"
               height="24px"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
+              onMouseEnter={(e) => {
+                if (theme?.sendButton.iconHoverColor) {
+                  e.currentTarget.style.stroke =
+                    theme.sendButton.iconHoverColor;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (theme?.sendButton.iconColor) {
+                  e.currentTarget.style.stroke = theme.sendButton.iconColor;
+                }
+              }}
             >
               <title>Send message</title>
               <path
